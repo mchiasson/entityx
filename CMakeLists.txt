@@ -198,9 +198,38 @@ install(
     FILES_MATCHING PATTERN "*.h"
     )
 
-install(
-    TARGETS ${install_libs}
-    LIBRARY DESTINATION "${libdir}"
-    ARCHIVE DESTINATION "${libdir}"
-    RUNTIME DESTINATION "bin"
+include(CMakePackageConfigHelpers)
+write_basic_package_version_file(
+    "${CMAKE_CURRENT_BINARY_DIR}/EntityXVersion.cmake"
+    VERSION ${ENTITYX_VERSION}
+    COMPATIBILITY AnyNewerVersion
     )
+
+set(targets_export_name "EntityXTargets")
+
+# Create the Config file.
+include(CMakePackageConfigHelpers)
+set(ConfigPackageLocation lib/cmake/EntityX)
+configure_package_config_file(
+  ${CMAKE_CURRENT_SOURCE_DIR}/cmake/EntityXConfig.cmake.in
+  ${CMAKE_CURRENT_BINARY_DIR}/EntityXConfig.cmake
+  INSTALL_DESTINATION ${ConfigPackageLocation}
+)
+
+install(TARGETS ${install_libs}
+    EXPORT ${targets_export_name}
+    LIBRARY DESTINATION lib COMPONENT Runtime
+    ARCHIVE DESTINATION lib COMPONENT Development
+    RUNTIME DESTINATION bin COMPONENT Runtime
+    BUNDLE DESTINATION bin COMPONENT Runtime
+    PUBLIC_HEADER DESTINATION include COMPONENT Development
+    BUNDLE DESTINATION bin COMPONENT Runtime
+)
+
+# Install the generated CMake files.
+install(EXPORT ${targets_export_name} NAMESPACE "EntityX::" DESTINATION lib/cmake/EntityX)
+install(
+  FILES "${CMAKE_CURRENT_BINARY_DIR}/EntityXVersion.cmake"
+        "${CMAKE_CURRENT_BINARY_DIR}/EntityXConfig.cmake"
+  DESTINATION ${ConfigPackageLocation}
+)
